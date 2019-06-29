@@ -1,0 +1,78 @@
+{
+	"name": "@titanium/bluebird",
+	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
+	"version": "3.0.0",
+	"alias": "bluebird",
+	"keywords": [
+		"promise",
+		"performance",
+		"promises",
+		"promises-a",
+		"promises-aplus",
+		"async",
+		"await",
+		"deferred",
+		"deferreds",
+		"future",
+		"flow control",
+		"dsl",
+		"fluent interface",
+		"mobile",
+		"titanium",
+		"appcelerator",
+		"axway",
+		"brentonhouse"
+
+	],
+	"homepage": "https://github.com/petkaantonov/bluebird",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/brentonhouse/titanium-bluebird.git"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "Petka Antonov",
+		"email": "petka_antonov@hotmail.com",
+		"url": "http://github.com/petkaantonov/"
+	},
+	"maintainers": [
+		{
+		  "name": "Brenton House",
+		  "email": "brenton.house@gmail.com",
+		  "url": "https://brenton.house"
+		}
+	  ],
+	"main": "./bluebird.js",
+	"readmeFilename": "readme.md",
+	"scripts": {
+		"download": "npm install --save-dev $npm_package_source_name@$npm_package_version",
+		"commit": "git add -A && git commit -m \":checkered_flag: v$npm_package_version :heavy_minus_sign: Repackaging from: $npm_package_source_url\"",
+		"tag": "git tag v$npm_package_version",
+		"push": "git push && git push --tags",
+		"update:version": "npm --no-git-tag-version --allow-same-version version --",
+		"update:download": "npm run download",
+		"update:copy": "cp ./node_modules/bluebird/js/browser/bluebird.js .",
+		"update:commit": "",
+		"update:push2": "npm run update:version --",
+		"update:push": "npm run update:version --",
+		"update:publish": "npm run update:version --",
+		"postupdate:download": "npm run update:copy",
+		"postupdate:commit": "npm run commit && npm run tag",
+		"postupdate:push": "npm run postupdate:commit && npm run push",
+		"postupdate:push2": "npm run postupdate:download && npm run postupdate:commit && npm run push",
+		"postupdate:publish": "npm run postupdate:push && npm publish",
+		"list-files": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz"
+	},
+	"source": {
+		"name": "bluebird",
+		"url": "https://www.npmjs.com/package/bluebird"
+	},
+	"devDependencies": {
+		"eslint": "^4.14.0",
+		"eslint-plugin-jsdoc": "^3.3.0",
+		"eslint-plugin-promise": "^3.6.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
