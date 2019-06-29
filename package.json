@@ -22,7 +22,6 @@
 		"appcelerator",
 		"axway",
 		"brentonhouse"
-
 	],
 	"homepage": "https://github.com/petkaantonov/bluebird",
 	"repository": {
@@ -37,11 +36,11 @@
 	},
 	"maintainers": [
 		{
-		  "name": "Brenton House",
-		  "email": "brenton.house@gmail.com",
-		  "url": "https://brenton.house"
+			"name": "Brenton House",
+			"email": "brenton.house@gmail.com",
+			"url": "https://brenton.house"
 		}
-	  ],
+	],
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -68,6 +67,7 @@
 		"url": "https://www.npmjs.com/package/bluebird"
 	},
 	"devDependencies": {
+		"bluebird": "^3.0.0",
 		"eslint": "^4.14.0",
 		"eslint-plugin-jsdoc": "^3.3.0",
 		"eslint-plugin-promise": "^3.6.0"
