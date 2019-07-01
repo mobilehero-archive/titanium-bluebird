@@ -1,7 +1,7 @@
 # @titanium/bluebird
 
-![https://www.npmjs.com/package/@titanium/bluebird](https://img.shields.io/npm/v/@titanium/bluebird.png)
 
+[![@titanium/bluebird](https://img.shields.io/npm/v/@titanium/bluebird.png)](https://www.npmjs.com/package/@titanium/bluebird)
 
 >⚡ This is a repackaging of:  [`https://github.com/petkaantonov/bluebird`](https://github.com/petkaantonov/bluebird)  
 
