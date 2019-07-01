@@ -23,7 +23,7 @@
  * 
  */
 /**
- * bluebird build version 3.0.0
+ * bluebird build version 3.0.1
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -1486,14 +1486,31 @@ Promise.prototype.catchReturn = function (value) {
 "use strict";
 module.exports = function(Promise, INTERNAL) {
 var PromiseReduce = Promise.reduce;
+var PromiseAll = Promise.all;
 
-Promise.prototype.mapSeries = Promise.prototype.each = function (fn) {
+function promiseAllThis() {
+    return PromiseAll(this);
+}
+
+function PromiseMapSeries(promises, fn) {
+    return PromiseReduce(promises, fn, INTERNAL, INTERNAL);
+}
+
+Promise.prototype.each = function (fn) {
+    return this.mapSeries(fn)
+            ._then(promiseAllThis, undefined, undefined, this, undefined);
+};
+
+Promise.prototype.mapSeries = function (fn) {
     return PromiseReduce(this, fn, INTERNAL, INTERNAL);
 };
 
-Promise.mapSeries = Promise.each = function (promises, fn) {
-    return PromiseReduce(promises, fn, INTERNAL, INTERNAL);
+Promise.each = function (promises, fn) {
+    return PromiseMapSeries(promises, fn)
+            ._then(promiseAllThis, undefined, undefined, promises, undefined);
 };
+
+Promise.mapSeries = PromiseMapSeries;
 };
 
 },{}],12:[function(_dereq_,module,exports){

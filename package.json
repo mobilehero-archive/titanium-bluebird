@@ -1,46 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
-	"version": "3.0.0-4",
-	"alias": "bluebird",
-	"keywords": [
-		"promise",
-		"performance",
-		"promises",
-		"promises-a",
-		"promises-aplus",
-		"async",
-		"await",
-		"deferred",
-		"deferreds",
-		"future",
-		"flow control",
-		"dsl",
-		"fluent interface",
-		"mobile",
-		"titanium",
-		"appcelerator",
-		"axway",
-		"brentonhouse"
-	],
-	"homepage": "https://github.com/petkaantonov/bluebird",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/brentonhouse/titanium-bluebird.git"
-	},
-	"license": "MIT",
-	"author": {
-		"name": "Petka Antonov",
-		"email": "petka_antonov@hotmail.com",
-		"url": "http://github.com/petkaantonov/"
-	},
-	"maintainers": [
-		{
-			"name": "Brenton House",
-			"email": "brenton.house@gmail.com",
-			"url": "https://brenton.house"
-		}
-	],
+	"version": "3.0.1",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -67,11 +28,49 @@
 		"url": "https://www.npmjs.com/package/bluebird"
 	},
 	"devDependencies": {
-		"bluebird": "^3.0.0",
+		"bluebird": "^3.0.1",
 		"eslint": "^4.14.0",
 		"eslint-plugin-jsdoc": "^3.3.0",
 		"eslint-plugin-promise": "^3.6.0"
 	},
+	"homepage": "https://github.com/petkaantonov/bluebird",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/brentonhouse/titanium-bluebird.git"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "Petka Antonov",
+		"email": "petka_antonov@hotmail.com",
+		"url": "http://github.com/petkaantonov/"
+	},
+	"maintainers": [
+		{
+			"name": "Brenton House",
+			"email": "brenton.house@gmail.com",
+			"url": "https://brenton.house"
+		}
+	],
+	"keywords": [
+		"promise",
+		"performance",
+		"promises",
+		"promises-a",
+		"promises-aplus",
+		"async",
+		"await",
+		"deferred",
+		"deferreds",
+		"future",
+		"flow control",
+		"dsl",
+		"fluent interface",
+		"mobile",
+		"titanium",
+		"appcelerator",
+		"axway",
+		"brentonhouse"
+	],
 	"publishConfig": {
 		"access": "public"
 	}
