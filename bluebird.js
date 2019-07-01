@@ -23,7 +23,7 @@
  * 
  */
 /**
- * bluebird build version 3.0.3
+ * bluebird build version 3.0.4
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -590,7 +590,7 @@ var contextStack = [];
 
 Promise.prototype._promiseCreated = function() {};
 Promise.prototype._pushContext = function() {};
-Promise.prototype._popContext = function() {return 0;};
+Promise.prototype._popContext = function() {return null;};
 Promise._peekContext = Promise.prototype._peekContext = function() {};
 
 function Context() {
@@ -598,7 +598,7 @@ function Context() {
 }
 Context.prototype._pushContext = function () {
     if (this._trace !== undefined) {
-        this._trace._promisesCreated = 0;
+        this._trace._promiseCreated = null;
         contextStack.push(this._trace);
     }
 };
@@ -606,11 +606,11 @@ Context.prototype._pushContext = function () {
 Context.prototype._popContext = function () {
     if (this._trace !== undefined) {
         var trace = contextStack.pop();
-        var ret = trace._promisesCreated;
-        trace._promisesCreated = 0;
+        var ret = trace._promiseCreated;
+        trace._promiseCreated = null;
         return ret;
     }
-    return 0;
+    return null;
 };
 
 function createContext() {
@@ -633,7 +633,7 @@ Context.activateLongStackTraces = function() {
     Promise._peekContext = Promise.prototype._peekContext = peekContext;
     Promise.prototype._promiseCreated = function() {
         var ctx = this._peekContext();
-        if (ctx) ctx._promisesCreated++;
+        if (ctx && ctx._promiseCreated == null) ctx._promiseCreated = this;
     };
 };
 return Context;
@@ -718,8 +718,8 @@ Promise.prototype._isRejectionUnhandled = function () {
     return (this._bitField & 1048576) > 0;
 };
 
-Promise.prototype._warn = function(message, shouldUseOwnTrace) {
-    return warn(message, shouldUseOwnTrace, this);
+Promise.prototype._warn = function(message, shouldUseOwnTrace, promise) {
+    return warn(message, shouldUseOwnTrace, promise || this);
 };
 
 Promise.onPossiblyUnhandledRejection = function (fn) {
@@ -898,14 +898,14 @@ function longStackTracesAttachExtraTrace(error, ignoreSelf) {
     }
 }
 
-function checkForgottenReturns(returnValue, promisesCreated, name, promise) {
+function checkForgottenReturns(returnValue, promiseCreated, name, promise) {
     if (returnValue === undefined &&
-        promisesCreated > 0 &&
+        promiseCreated !== null &&
         config.longStackTraces &&
         config.warnings) {
         var msg = "a promise was created in a " + name +
             " handler but was not returned from it";
-        promise._warn(msg);
+        promise._warn(msg, true, promiseCreated);
     }
 }
 
@@ -1394,7 +1394,7 @@ if (typeof console !== "undefined" && typeof console.warn !== "undefined") {
     if (util.isNode && process.stderr.isTTY) {
         printWarning = function(message, isSoft) {
             var color = isSoft ? "\u001b[33m" : "\u001b[31m";
-            process.stderr.write(color + message + "\u001b[0m\n");
+            console.warn(color + message + "\u001b[0m\n");
         };
     } else if (!util.isNode && typeof (new Error().stack) === "string") {
         printWarning = function(message, isSoft) {
@@ -2241,10 +2241,10 @@ MappingPromiseArray.prototype._promiseFulfilled = function (value, index) {
         var receiver = promise._boundValue();
         promise._pushContext();
         var ret = tryCatch(callback).call(receiver, value, index, length);
-        var promisesCreated = promise._popContext();
+        var promiseCreated = promise._popContext();
         debug.checkForgottenReturns(
             ret,
-            promisesCreated,
+            promiseCreated,
             preservedValues !== null ? "Promise.filter" : "Promise.map",
             promise
         );
@@ -2992,7 +2992,7 @@ Promise.prototype._settlePromiseFromHandler = function (
     } else {
         x = tryCatch(handler).call(receiver, value);
     }
-    var promisesCreatedDuringHandlerInvocation = promise._popContext();
+    var promiseCreatedDuringHandlerInvocation = promise._popContext();
     bitField = promise._bitField;
     if (((bitField & 65536) !== 0)) return;
 
@@ -3003,11 +3003,12 @@ Promise.prototype._settlePromiseFromHandler = function (
         promise._rejectCallback(err, false);
     } else {
         if (x === undefined &&
-            promisesCreatedDuringHandlerInvocation > 0 &&
+            promiseCreatedDuringHandlerInvocation !== null &&
             debug.longStackTraces() &&
             debug.warnings()) {
             promise._warn("a promise was created in a handler but " +
-                "none were returned from it", true);
+                "none were returned from it", true,
+                promiseCreatedDuringHandlerInvocation);
         }
         promise._resolveCallback(x);
     }
@@ -4182,10 +4183,10 @@ function gotValue(value) {
     if (ret instanceof Promise) {
         array._currentCancellable = ret;
     }
-    var promisesCreated = promise._popContext();
+    var promiseCreated = promise._popContext();
     debug.checkForgottenReturns(
         ret,
-        promisesCreated,
+        promiseCreated,
         array._eachValues !== undefined ? "Promise.each" : "Promise.reduce",
         promise
     );
@@ -4858,9 +4859,9 @@ module.exports = function (Promise, apiRejection, tryConvertToPromise,
                 fn = tryCatch(fn);
                 var ret = spreadArgs
                     ? fn.apply(undefined, inspections) : fn(inspections);
-                var promisesCreated = promise._popContext();
+                var promiseCreated = promise._popContext();
                 debug.checkForgottenReturns(
-                    ret, promisesCreated, "Promise.using", promise);
+                    ret, promiseCreated, "Promise.using", promise);
                 return ret;
             });
 
