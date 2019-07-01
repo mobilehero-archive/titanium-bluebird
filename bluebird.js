@@ -23,7 +23,7 @@
  * 
  */
 /**
- * bluebird build version 3.1.5
+ * bluebird build version 3.2.0
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -793,6 +793,84 @@ Promise.hasLongStackTraces = function () {
     return config.longStackTraces && longStackTracesIsSupported();
 };
 
+function createFireDomEvent() {
+    try {
+        var event = document.createEvent("CustomEvent");
+        event.initCustomEvent("testingtheevent", false, true, {});
+        global.dispatchEvent(event);
+        return function(name, event) {
+            var domEvent = document.createEvent("CustomEvent");
+            domEvent.initCustomEvent(name.toLowerCase(), false, true, event);
+            return !global.dispatchEvent(domEvent);
+        };
+    } catch (e) {}
+}
+
+var fireDomEvent = createFireDomEvent();
+var fireGlobalEvent = (function() {
+    if (util.isNode) {
+        return function() {
+            return process.emit.apply(process, arguments);
+        };
+    } else {
+        if (!global) {
+            return function() {
+                return false;
+            };
+        }
+        return function(name) {
+            var methodName = "on" + name.toLowerCase();
+            var method = global[methodName];
+            if (!method) return false;
+            method.apply(global, [].slice.call(arguments, 1));
+            return true;
+        };
+    }
+})();
+
+function generatePromiseLifecycleEventObject(name, promise) {
+    return {promise: promise};
+}
+
+var eventToObjectGenerator = {
+    promiseCreated: generatePromiseLifecycleEventObject,
+    promiseFulfilled: generatePromiseLifecycleEventObject,
+    promiseRejected: generatePromiseLifecycleEventObject,
+    promiseResolved: generatePromiseLifecycleEventObject,
+    promiseCancelled: generatePromiseLifecycleEventObject,
+    promiseChained: function(name, promise, child) {
+        return {promise: promise, child: child};
+    },
+    warning: function(name, warning) {
+        return {warning: warning};
+    },
+    unhandledRejection: function (name, reason, promise) {
+        return {reason: reason, promise: promise};
+    },
+    rejectionHandled: generatePromiseLifecycleEventObject
+};
+
+var fireEventImpl = function () {
+    var name = arguments[0];
+    var eventFired = false;
+    try {
+        eventFired = fireGlobalEvent.apply(null, arguments);
+    } catch (e) {
+        async.throwLater(e);
+        eventFired = true;
+    }
+    if (fireDomEvent) {
+        try {
+            eventFired = eventFired || fireDomEvent(name,
+                    eventToObjectGenerator[name].apply(null, arguments));
+        } catch (e) {
+            async.throwLater(e);
+            eventFired = true;
+        }
+    }
+    return eventFired;
+};
+
 Promise.config = function(opts) {
     opts = Object(opts);
     if ("longStackTraces" in opts) {
@@ -828,6 +906,20 @@ Promise.config = function(opts) {
         Promise.prototype._execute = cancellationExecute;
         propagateFromFunction = cancellationPropagateFrom;
         config.cancellation = true;
+    }
+    if ("monitoring" in opts) {
+        if (opts.monitoring && !config.monitoring) {
+            if (opts.monitoring === "no_dom_events") {
+                fireDomEvent = undefined;
+            } else {
+                fireDomEvent = createFireDomEvent();
+            }
+            Promise.fireEvent = fireEventImpl;
+            config.monitoring = opts.monitoring;
+        } else if (config.monitoring) {
+            Promise.fireEvent = function (){};
+            config.monitoring = false;
+        }
     }
 };
 
@@ -983,6 +1075,7 @@ function warn(message, shouldUseOwnTrace, promise) {
         warning.stack = parsed.message + "\n" + parsed.stack.join("\n");
     }
     formatAndLogError(warning, "", true);
+    Promise.fireEvent("warning", warning);
 }
 
 function reconstructStack(message, stacks) {
@@ -1109,30 +1202,12 @@ function fireRejectionEvent(name, localHandler, reason, promise) {
         async.throwLater(e);
     }
 
-    var globalEventFired = false;
-    try {
-        globalEventFired = fireGlobalEvent(name, reason, promise);
-    } catch (e) {
-        globalEventFired = true;
-        async.throwLater(e);
-    }
-
-    var domEventFired = false;
-    if (fireDomEvent) {
-        try {
-            domEventFired = fireDomEvent(name.toLowerCase(), {
-                reason: reason,
-                promise: promise
-            });
-        } catch (e) {
-            domEventFired = true;
-            async.throwLater(e);
+    if (name === "unhandledRejection") {
+        if (!fireEventImpl(name, reason, promise) && !localEventFired) {
+            formatAndLogError(reason, "Unhandled rejection ");
         }
-    }
-
-    if (!globalEventFired && !localEventFired && !domEventFired &&
-        name === "unhandledRejection") {
-        formatAndLogError(reason, "Unhandled rejection ");
+    } else {
+        fireEventImpl(name, promise);
     }
 }
 
@@ -1377,59 +1452,6 @@ var captureStackTrace = (function stackDetection() {
 
 })([]);
 
-var fireDomEvent;
-var fireGlobalEvent = (function() {
-    if (util.isNode) {
-        return function(name, reason, promise) {
-            if (name === "rejectionHandled") {
-                return process.emit(name, promise);
-            } else {
-                return process.emit(name, reason, promise);
-            }
-        };
-    } else {
-        var globalObject = typeof self !== "undefined" ? self :
-                     typeof window !== "undefined" ? window :
-                     typeof global !== "undefined" ? global :
-                     this !== undefined ? this : null;
-
-        if (!globalObject) {
-            return function() {
-                return false;
-            };
-        }
-
-        try {
-            var event = document.createEvent("CustomEvent");
-            event.initCustomEvent("testingtheevent", false, true, {});
-            globalObject.dispatchEvent(event);
-            fireDomEvent = function(type, detail) {
-                var event = document.createEvent("CustomEvent");
-                event.initCustomEvent(type, false, true, detail);
-                return !globalObject.dispatchEvent(event);
-            };
-        } catch (e) {}
-
-        var toWindowMethodNameMap = {};
-        toWindowMethodNameMap["unhandledRejection"] = ("on" +
-            "unhandledRejection").toLowerCase();
-        toWindowMethodNameMap["rejectionHandled"] = ("on" +
-            "rejectionHandled").toLowerCase();
-
-        return function(name, reason, promise) {
-            var methodName = toWindowMethodNameMap[name];
-            var method = globalObject[methodName];
-            if (!method) return false;
-            if (name === "rejectionHandled") {
-                method.call(globalObject, promise);
-            } else {
-                method.call(globalObject, reason, promise);
-            }
-            return true;
-        };
-    }
-})();
-
 if (typeof console !== "undefined" && typeof console.warn !== "undefined") {
     printWarning = function (message) {
         console.warn(message);
@@ -1450,7 +1472,8 @@ if (typeof console !== "undefined" && typeof console.warn !== "undefined") {
 var config = {
     warnings: warnings,
     longStackTraces: false,
-    cancellation: false
+    cancellation: false,
+    monitoring: false
 };
 
 if (longStackTraces) Promise.longStackTraces();
@@ -1465,6 +1488,9 @@ return {
     cancellation: function() {
         return config.cancellation;
     },
+    monitoring: function() {
+        return config.monitoring;
+    },
     propagateFromFunction: function() {
         return propagateFromFunction;
     },
@@ -1475,7 +1501,9 @@ return {
     setBounds: setBounds,
     warn: warn,
     deprecated: deprecated,
-    CapturedTrace: CapturedTrace
+    CapturedTrace: CapturedTrace,
+    fireDomEvent: fireDomEvent,
+    fireGlobalEvent: fireGlobalEvent
 };
 };
 
@@ -2602,13 +2630,14 @@ var INTERNAL = function(){};
 var APPLY = {};
 var NEXT_FILTER = {};
 var tryConvertToPromise = _dereq_("./thenables")(Promise, INTERNAL);
-var PromiseArray =
-    _dereq_("./promise_array")(Promise, INTERNAL,
-                               tryConvertToPromise, apiRejection, Proxyable);
 var Context = _dereq_("./context")(Promise);
  /*jshint unused:false*/
 var createContext = Context.create;
+Promise.fireEvent = function(){};
 var debug = _dereq_("./debuggability")(Promise, Context);
+var PromiseArray =
+    _dereq_("./promise_array")(Promise, INTERNAL,
+    tryConvertToPromise, apiRejection, Proxyable);
 var CapturedTrace = debug.CapturedTrace;
 var PassThroughHandlerContext =
     _dereq_("./finally")(Promise, tryConvertToPromise);
@@ -2636,6 +2665,7 @@ function Promise(executor) {
         this._resolveFromExecutor(executor);
     }
     this._promiseCreated();
+    Promise.fireEvent("promiseCreated", this);
 }
 
 Promise.prototype.toString = function () {
@@ -2794,6 +2824,7 @@ Promise.prototype._then = function (
                 receiver = target === this ? undefined : this._boundTo;
             }
         }
+        Promise.fireEvent("promiseChained", this, promise);
     }
 
     var domain = getDomain();
@@ -2846,14 +2877,17 @@ Promise.prototype._setLength = function (len) {
 
 Promise.prototype._setFulfilled = function () {
     this._bitField = this._bitField | 33554432;
+    Promise.fireEvent("promiseFulfilled", this);
 };
 
 Promise.prototype._setRejected = function () {
     this._bitField = this._bitField | 16777216;
+    Promise.fireEvent("promiseRejected", this);
 };
 
 Promise.prototype._setFollowing = function () {
     this._bitField = this._bitField | 67108864;
+    Promise.fireEvent("promiseResolved", this);
 };
 
 Promise.prototype._setIsFinal = function () {
@@ -2870,6 +2904,7 @@ Promise.prototype._unsetCancelled = function() {
 
 Promise.prototype._setCancelled = function() {
     this._bitField = this._bitField | 65536;
+    Promise.fireEvent("promiseCancelled", this);
 };
 
 Promise.prototype._setAsyncGuaranteed = function() {
@@ -3408,6 +3443,8 @@ PromiseArray.prototype._iterate = function(values) {
         if (maybePromise instanceof Promise) {
             maybePromise = maybePromise._target();
             bitField = maybePromise._bitField;
+            Promise.fireEvent("promiseChained", this,
+                maybePromise);
         } else {
             bitField = null;
         }
@@ -4989,6 +5026,13 @@ var canEvaluate = typeof navigator == "undefined";
 
 var errorObj = {e: {}};
 var tryCatchTarget;
+var isNode = typeof process !== "undefined" &&
+    classString(process).toLowerCase() === "[object process]";
+var globalObject = typeof self !== "undefined" ? self :
+    typeof window !== "undefined" ? window :
+    typeof global !== "undefined" ? global :
+    this !== undefined ? this : null;
+
 function tryCatcher() {
     try {
         var target = tryCatchTarget;
@@ -5280,9 +5324,6 @@ if (typeof Symbol !== "undefined" && Symbol.iterator) {
     };
 }
 
-var isNode = typeof process !== "undefined" &&
-        classString(process).toLowerCase() === "[object process]";
-
 function env(key, def) {
     return isNode ? process.env[key] : def;
 }
@@ -5316,7 +5357,8 @@ var ret = {
     hasDevTools: typeof chrome !== "undefined" && chrome &&
                  typeof chrome.loadTimes === "function",
     isNode: isNode,
-    env: env
+    env: env,
+    global: globalObject
 };
 ret.isRecentNode = ret.isNode && (function() {
     var version = process.versions.node.split(".").map(Number);
