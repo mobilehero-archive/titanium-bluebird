@@ -23,7 +23,7 @@
  * 
  */
 /**
- * bluebird build version 3.0.4
+ * bluebird build version 3.0.5
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -2352,7 +2352,9 @@ Promise.method = function (fn) {
         ret._captureStackTrace();
         ret._pushContext();
         var value = tryCatch(fn).apply(this, arguments);
-        ret._popContext();
+        var promiseCreated = ret._popContext();
+        debug.checkForgottenReturns(
+            value, promiseCreated, "Promise.method", ret);
         ret._resolveFromSyncValue(value);
         return ret;
     };
@@ -2375,7 +2377,9 @@ Promise.attempt = Promise["try"] = function (fn) {
     } else {
         value = tryCatch(fn)();
     }
-    ret._popContext();
+    var promiseCreated = ret._popContext();
+    debug.checkForgottenReturns(
+        value, promiseCreated, "Promise.try", ret);
     ret._resolveFromSyncValue(value);
     return ret;
 };
@@ -2992,7 +2996,7 @@ Promise.prototype._settlePromiseFromHandler = function (
     } else {
         x = tryCatch(handler).call(receiver, value);
     }
-    var promiseCreatedDuringHandlerInvocation = promise._popContext();
+    var promiseCreated = promise._popContext();
     bitField = promise._bitField;
     if (((bitField & 65536) !== 0)) return;
 
@@ -3002,14 +3006,7 @@ Promise.prototype._settlePromiseFromHandler = function (
         var err = x === promise ? makeSelfResolutionError() : x.e;
         promise._rejectCallback(err, false);
     } else {
-        if (x === undefined &&
-            promiseCreatedDuringHandlerInvocation !== null &&
-            debug.longStackTraces() &&
-            debug.warnings()) {
-            promise._warn("a promise was created in a handler but " +
-                "none were returned from it", true,
-                promiseCreatedDuringHandlerInvocation);
-        }
+        debug.checkForgottenReturns(x, promiseCreated, "",  promise);
         promise._resolveCallback(x);
     }
 };
