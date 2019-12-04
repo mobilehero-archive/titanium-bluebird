@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
-	"version": "3.7.0",
+	"version": "3.7.1",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -28,7 +28,7 @@
 		"url": "https://www.npmjs.com/package/bluebird"
 	},
 	"devDependencies": {
-		"bluebird": "^3.7.0",
+		"bluebird": "^3.7.1",
 		"eslint": "^6.1.0",
 		"eslint-plugin-jsdoc": "^15.8.0",
 		"eslint-plugin-promise": "^4.2.1"
