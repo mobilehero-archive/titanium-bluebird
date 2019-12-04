@@ -28,7 +28,7 @@
 		"url": "https://www.npmjs.com/package/bluebird"
 	},
 	"devDependencies": {
-		"bluebird": "^3.5.5",
+		"bluebird": "^3.6.0",
 		"eslint": "^6.1.0",
 		"eslint-plugin-jsdoc": "^15.8.0",
 		"eslint-plugin-promise": "^4.2.1"
