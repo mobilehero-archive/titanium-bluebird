@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
-	"version": "3.6.0",
+	"version": "3.6.0-0",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
