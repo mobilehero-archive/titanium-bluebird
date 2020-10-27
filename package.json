@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
-	"version": "3.7.2-1",
+	"version": "3.7.3",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -21,7 +21,10 @@
 		"postupdate:push": "npm run postupdate:commit && npm run push",
 		"postupdate:push2": "npm run postupdate:download && npm run postupdate:commit && npm run push",
 		"postupdate:publish": "npm run postupdate:push && npm publish",
-		"list-files": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz"
+		"list": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz",
+		"prep": "npm install --ignore-scripts && npm run list",
+		"test": "npm run prep",
+		"lint": "eslint . --fix"
 	},
 	"source": {
 		"name": "bluebird",
@@ -29,8 +32,9 @@
 	},
 	"devDependencies": {
 		"bluebird": "^3.7.2",
-		"eslint": "^7.7.0",
-		"eslint-plugin-jsdoc": "^30.2.4",
+		"eslint": "^7.12.1",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-jsdoc": "^30.7.3",
 		"eslint-plugin-promise": "^4.2.1"
 	},
 	"homepage": "https://github.com/petkaantonov/bluebird",
@@ -69,9 +73,15 @@
 		"titanium",
 		"appcelerator",
 		"axway",
-		"brentonhouse"
+		"brenton-house",
+		"turbo"
 	],
 	"publishConfig": {
 		"access": "public"
+	},
+	"titanium": {
+		"aliases": {
+			"bluebird": "./bluebird.js"
+		}
 	}
 }
