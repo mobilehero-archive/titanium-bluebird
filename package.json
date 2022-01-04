@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
-	"description": "Compact version of bluebird Promises/A+ implementation for Titanium native mobile apps",
-	"version": "3.7.3",
+	"description": "Axway Amplify module for using Promises with Appcelerator Titanium using bluebird.js",
+	"version": "3.7.5",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -24,7 +24,8 @@
 		"list": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz",
 		"prep": "npm install --ignore-scripts && npm run list",
 		"test": "npm run prep",
-		"lint": "eslint . --fix"
+		"lint": "eslint . --fix",
+		"prepublishOnly": "git pull && bump insane"
 	},
 	"source": {
 		"name": "bluebird",
@@ -37,7 +38,7 @@
 		"eslint-plugin-jsdoc": "^30.7.3",
 		"eslint-plugin-promise": "^4.2.1"
 	},
-	"homepage": "https://github.com/petkaantonov/bluebird",
+	"homepage": "https://brenton.house/saying-goodbye-to-axway-amplify-titanium-31a44f3671de",
 	"repository": {
 		"type": "git",
 		"url": "github:brentonhouse/titanium-bluebird"
@@ -73,8 +74,16 @@
 		"titanium",
 		"appcelerator",
 		"axway",
-		"brenton-house",
-		"turbo"
+		"plugin",
+		"amplify",
+		"api-builder",
+		"appcelerator-titanium",
+		"titanium-sdk",
+		"titanium-mobile",
+		"titanium-module",
+		"axway-sdk",
+		"axway-amplify",
+		"brenton-house"
 	],
 	"publishConfig": {
 		"access": "public"
