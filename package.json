@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "Axway Amplify module for using Promises with Appcelerator Titanium using bluebird.js",
-	"version": "3.7.5",
+	"version": "3.7.6",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
