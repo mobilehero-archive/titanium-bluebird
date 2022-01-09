@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
-	"description": "Axway Amplify module for using Promises with Appcelerator Titanium using bluebird.js",
-	"version": "3.7.10",
+	"description": "⭐  Axway Amplify module for using Promises with Appcelerator Titanium using bluebird.js",
+	"version": "3.7.11",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -21,11 +21,12 @@
 		"postupdate:push": "npm run postupdate:commit && npm run push",
 		"postupdate:push2": "npm run postupdate:download && npm run postupdate:commit && npm run push",
 		"postupdate:publish": "npm run postupdate:push && npm publish",
-		"list": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz",
-		"prep": "npm install --ignore-scripts && npm run list",
-		"test": "npm run prep",
 		"lint": "eslint . --fix",
-		"prepublishOnly": "git pull && bump insane"
+		"list": "npm pack && tar -xvzf *.tgz && rm -rf package *.tgz",
+		"prep": "npm install --ignore-scripts",
+		"test": "npm run prep",
+		"prepublishOnly": "git pull && npm test && bump insane",
+		"prepublishOnly2": "git pull && npm test && npm audit fix && bump insane"
 	},
 	"source": {
 		"name": "bluebird",
@@ -41,7 +42,7 @@
 	"homepage": "https://brenton.house/saying-goodbye-to-axway-amplify-titanium-31a44f3671de",
 	"repository": {
 		"type": "git",
-		"url": "github:brentonhouse/titanium-bluebird"
+		"url": "github:mobilehero-archive/titanium-bluebird"
 	},
 	"license": "MIT",
 	"author": {
@@ -52,7 +53,6 @@
 	"maintainers": [
 		{
 			"name": "Brenton House",
-			"email": "brenton.house@gmail.com",
 			"url": "https://brenton.house"
 		}
 	],
