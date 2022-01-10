@@ -1,7 +1,7 @@
 {
 	"name": "@titanium/bluebird",
 	"description": "⭐  Axway Amplify module for using Promises with Appcelerator Titanium using bluebird.js",
-	"version": "3.7.11",
+	"version": "3.7.12",
 	"main": "./bluebird.js",
 	"readmeFilename": "readme.md",
 	"scripts": {
@@ -36,7 +36,7 @@
 		"bluebird": "^3.7.2",
 		"eslint": "^8.6.0",
 		"eslint-plugin-import": "^2.25.4",
-		"eslint-plugin-jsdoc": "^37.5.2",
+		"eslint-plugin-jsdoc": "^37.6.1",
 		"eslint-plugin-promise": "^6.0.0"
 	},
 	"homepage": "https://brenton.house/saying-goodbye-to-axway-amplify-titanium-31a44f3671de",
